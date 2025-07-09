@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nexhil AI - AI Website Generator</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      /* --- NEW COLOR PALETTE & STYLING --- */
+      :root {
+        --accent: #f7a343; /* A pleasing, modern cyan */
+        --accent-dark: #f7a343;
+        --success: #449e47;
+        --danger: #f44336;
+        --bg-color: #252525;
+        --surface-color: #252525;
+        --card-color: #141313;
+        --text-primary: #FFFFFF;
+        --text-secondary: #252525;
+        --border-color: rgba(255, 255, 255, 0.1);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        height: 100vh;
+        overflow: hidden;
+        background: var(--bg-color);
+        color: var(--text-primary);
+      }
+
+      .app-container {
+        display: flex;
+        height: 100vh;
+      }
+
+      /* --- SIDEBAR (Unchanged) --- */
+      .sidebar {
+        width: 280px;
+        background: var(--surface-color);
+        border-right: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        transition: all 0.3s ease;
+      }
+      .sidebar-header { padding: 1.5rem; border-bottom: 1px solid var(--border-color); }
+      .logo { display: flex; align-items: center; gap: 0.75rem; font-size: 1.25rem; font-weight: 700; color: var(--accent); }
+      .logo i { font-size: 1.5rem; }
+      .nav-section { flex: 1; padding: 1rem 1.5rem; }
+      .nav-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s ease; margin-bottom: 0.5rem; text-decoration: none; color: inherit; }
+      .nav-item:hover { background: rgba(0, 188, 212, 0.1); }
+      .nav-item i { width: 20px; text-align: center; opacity: 0.7; }
+      .recent-projects { margin-top: 2rem; }
+      .recent-projects h3 { font-size: 0.875rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--text-secondary); }
+      .project-item { padding: 0.75rem; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s ease; border: 1px solid transparent; margin-bottom: 0.5rem; }
+      .project-item:hover { background: rgba(0, 188, 212, 0.1); border-color: var(--accent); }
+      .project-item h4 { font-size: 0.875rem; font-weight: 600; margin-bottom: 0.25rem; }
+      .project-item p { font-size: 0.75rem; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+      /* --- NEW MAIN CONTENT LAYOUT --- */
+      .main-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column; /* Stack top-bar, content-area, and prompt-panel vertically */
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      .top-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem 2rem;
+        background: var(--surface-color);
+        border-bottom: 1px solid var(--border-color);
+        flex-shrink: 0; /* Prevent top-bar from shrinking */
+      }
+
+      .top-bar-left h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary); /* Simple white text */
+      }
+
+      .top-bar-right { display: flex; align-items: center; gap: 1rem; }
+      .status-indicator { display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--text-secondary); }
+      .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); animation: pulse 2s infinite; }
+      @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+      .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 0.5rem; border: none; cursor: pointer; font-size: 0.875rem; font-weight: 500; transition: all 0.2s ease; text-decoration: none; }
+      .btn-primary { background: var(--accent); color: white; }
+      .btn-primary:hover { background: var(--accent-dark); transform: translateY(-1px); }
+      .btn-secondary { background: var(--card-color); border: 1px solid var(--border-color); color: var(--text-primary); }
+      .btn-secondary:hover { background: var(--surface-color); }
+      .theme-toggle { width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+      
+      /* --- NEW: Middle area for Code and Preview --- */
+      .content-area {
+        flex: 1; /* This area takes up the most space */
+        display: flex;
+        gap: 1.5rem;
+        padding: 1.5rem 2rem 0; /* Add padding only to top/sides */
+        overflow: hidden;
+        min-height: 0;
+      }
+
+      .code-panel,
+      .output-panel {
+        background: var(--surface-color);
+        border: 1px solid var(--border-color);
+        border-radius: 1rem;
+        display: flex;
+        flex-direction: column;
+        flex: 1; /* Both panels share space equally */
+        min-width: 0;
+        overflow: hidden;
+      }
+      
+      .panel-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; }
+      .panel-title { font-size: 1.125rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; }
+      .panel-content { flex: 1; padding: 1rem; overflow: auto; }
+      
+      /* --- NEW: Code Panel specific styles --- */
+      .code-preview-wrapper {
+        background: #252525; /* A classic code editor background color */
+        border-radius: 1rem;
+        height: 100%;
+        overflow: auto;
+      }
+      #codePreview {
+        color: #adb2bc;
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 0.875rem;
+        white-space: pre;
+        padding: 1rem;
+      }
+      
+      /* --- NEW: Preview Panel specific styles --- */
+      .preview-frame { width: 100%; height: 100%; border: none; border-radius: 0.5rem; background: white; }
+      .output-panel .panel-content { padding: 0.5rem; }
+
+      /* --- NEW: Prompt Panel at the bottom --- */
+      .prompt-panel {
+        flex-shrink: 0; /* Prevent this panel from shrinking */
+        background: var(--surface-color);
+        border-top: 1px solid var(--border-color);
+        padding: 1.5rem 2rem;
+      }
+      .prompt-container { display: flex; align-items: center; gap: 1rem; }
+
+      .prompt-textarea {
+        flex-grow: 1; /* Textarea takes available space */
+        padding: 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 0.75rem;
+        background: var(--bg-color);
+        color: var(--text-primary);
+        font-family: inherit;
+        font-size: 1rem;
+        resize: none; /* No vertical resize needed for single line */
+        transition: all 0.2s ease;
+        height: 50px;
+      }
+
+      .prompt-textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.2); }
+      
+      .generate-btn {
+        background: var(--accent);
+        color: white;
+        padding: 0 2rem;
+        height: 50px;
+        border-radius: 0.75rem;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+      }
+
+      .generate-btn:hover { background: var(--accent-dark); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0, 188, 212, 0.2); }
+      .generate-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
+      
+      /* Loading Overlay (Unchanged) */
+      .loading-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+      .loading-spinner { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+      .spinner { width: 50px; height: 50px; border: 3px solid rgba(0, 188, 212, 0.3); border-top: 3px solid var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      .loading-text { color: white; font-weight: 600; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">NEXBOT </div>
+            </div>
+            <div class="nav-section">
+                <a href="#" class="nav-item" id="newProject"><i class="fas fa-plus"></i> New Project</a>
+                <a href="#" class="nav-item" id="templates"><i class="fas fa-folder"></i> Templates</a>
+                <div class="recent-projects">
+                    <h3>Recent Projects</h3>
+                    <div class="project-item">
+                        <h4>E-commerce Store</h4>
+                        <p>Modern online store with shopping cart</p>
+                    </div>
+                    <div class="project-item">
+                        <h4>Portfolio Website</h4>
+                        <p>Clean portfolio for designer</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="top-bar">
+                <div class="top-bar-left">
+                    
+                </div>
+                <div class="top-bar-right">
+                    <div class="status-indicator"><div class="status-dot"></div> Connected</div>
+                    <button class="btn btn-primary" id="exportBtn" disabled><i class="fas fa-file-archive"></i> Export HTML</button>
+                </div>
+            </div>
+
+            <!-- NEW: Middle area for Code and Preview -->
+            <div class="content-area">
+                <!-- Code Panel -->
+                <div class="code-panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><i class="fas fa-code"></i> Code</div>
+                        <button class="btn btn-secondary" id="copyCodeBtn"><i class="fas fa-copy"></i> Copy Code</button>
+                    </div>
+                    <div class="panel-content">
+                        <div class="code-preview-wrapper">
+                            <pre><code id="codePreview">Your generated HTML code will appear here...</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preview Panel -->
+                <div class="output-panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><i class="fas fa-eye"></i> Preview</div>
+                        <button class="btn btn-secondary" id="fullscreenBtn"><i class="fas fa-expand"></i> Fullscreen</button>
+                    </div>
+                    <div class="panel-content">
+                        <iframe class="preview-frame" id="previewFrame"></iframe>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NEW: Prompt Panel at the bottom -->
+            <div class="prompt-panel">
+                <div class="prompt-container">
+                    <textarea class="prompt-textarea" id="promptInput" placeholder="Describe the website you want to create... e.g., 'a modern portfolio for a photographer'"></textarea>
+                    <button class="generate-btn" id="generateBtn">
+                        <i class="fas fa-magic"></i> Generate
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <div class="loading-text">
+                <h3>Generating your masterpiece...</h3>
+                <p id="loadingStatus">Initializing AI model</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Element Selectors ---
+        const generateBtn = document.getElementById('generateBtn');
+        const promptInput = document.getElementById('promptInput');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const loadingStatus = document.getElementById('loadingStatus');
+        const previewFrame = document.getElementById('previewFrame');
+        const codePreview = document.getElementById('codePreview');
+        const exportBtn = document.getElementById('exportBtn');
+        const copyCodeBtn = document.getElementById('copyCodeBtn');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+
+        // --- Event Listeners ---
+        generateBtn.addEventListener('click', () => {
+            const prompt = promptInput.value.trim();
+            if (!prompt) {
+                alert('Please enter a description for your website.');
+                return;
+            }
+            generateWebsite(prompt);
+        });
+
+        copyCodeBtn.addEventListener('click', () => {
+            if (window.generatedHTML) {
+                navigator.clipboard.writeText(window.generatedHTML).then(() => {
+                    copyCodeBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                    setTimeout(() => {
+                        copyCodeBtn.innerHTML = '<i class="fas fa-copy"></i> Copy Code';
+                    }, 2000);
+                });
+            }
+        });
+
+        exportBtn.addEventListener('click', () => {
+            if (window.generatedHTML) {
+                const blob = new Blob([window.generatedHTML], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'generated-website.html';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        });
+
+        fullscreenBtn.addEventListener('click', () => {
+            if (previewFrame.src) {
+                window.open(previewFrame.src, '_blank');
+            }
+        });
+        
+        document.getElementById('newProject').addEventListener('click', (e) => {
+            e.preventDefault();
+            promptInput.value = '';
+            previewFrame.src = 'about:blank';
+            codePreview.textContent = 'Your generated HTML code will appear here...';
+            exportBtn.disabled = true;
+            window.generatedHTML = null;
+        });
+
+        document.getElementById('templates').addEventListener('click', (e) => {
+            e.preventDefault();
+            const templates = [
+                'Create a modern portfolio website for a graphic designer',
+                'Build an e-commerce store for selling handmade crafts',
+                'Design a landing page for a SaaS product',
+                'Create a restaurant website with menu and reservations',
+                'Build a blog website for travel experiences'
+            ];
+            const randomTemplate = templates[Math.floor(Math.random() * templates.length)];
+            promptInput.value = randomTemplate;
+        });
+        
+        document.querySelectorAll('.project-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const title = item.querySelector('h4').textContent;
+                const description = item.querySelector('p').textContent;
+                promptInput.value = `Create a ${title.toLowerCase()} - ${description}`;
+            });
+        });
+
+
+        // --- Core Functions ---
+        async function generateWebsite(prompt) {
+            loadingOverlay.style.display = 'flex';
+            generateBtn.disabled = true;
+            
+            const loadingSteps = ['Analyzing requirements...', 'Designing layout...', 'Generating HTML & CSS...', 'Finalizing website...'];
+            let stepIndex = 0;
+            loadingStatus.textContent = loadingSteps[stepIndex];
+            const stepInterval = setInterval(() => {
+                stepIndex = (stepIndex + 1) % loadingSteps.length;
+                loadingStatus.textContent = loadingSteps[stepIndex];
+            }, 1000);
+
+            try {
+                await new Promise(resolve => setTimeout(resolve, 4000));
+                
+                const generatedHTML = generateSampleWebsite(prompt);
+                window.generatedHTML = generatedHTML;
+                
+                // Display in code view
+                codePreview.textContent = generatedHTML;
+                
+                // Display in preview frame
+                const blob = new Blob([generatedHTML], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+                previewFrame.src = url;
+                
+                exportBtn.disabled = false;
+                
+            } catch (error) {
+                alert('Error generating website. Please try again.');
+            } finally {
+                loadingOverlay.style.display = 'none';
+                generateBtn.disabled = false;
+                clearInterval(stepInterval);
+            }
+        }
+
+        function generateSampleWebsite(prompt) {
+            const isPortfolio = prompt.toLowerCase().includes('portfolio');
+            const isEcommerce = prompt.toLowerCase().includes('ecommerce') || prompt.toLowerCase().includes('store');
+            const accent = '#00BCD4';
+            const bg = '#f4f7f6';
+            const text = '#333';
+            
+            let head = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generated Website</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background-color: ${bg}; color: ${text}; line-height: 1.6; }
+        .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+        header { background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05); padding: 1rem 0; }
+        nav { display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 1.5rem; font-weight: bold; color: ${accent}; }
+        .nav-links { display: flex; list-style: none; gap: 2rem; padding: 0; }
+        .nav-links a { color: ${text}; text-decoration: none; font-weight: 500; }
+        .hero { padding: 5rem 0; text-align: center; background: ${accent}; color: white; }
+        .hero h1 { font-size: 3rem; margin-bottom: 1rem; }
+        .hero p { font-size: 1.2rem; margin-bottom: 2rem; opacity: 0.9; }
+        .btn { background: white; color: ${accent}; padding: 0.8rem 1.8rem; border: 2px solid white; border-radius: 50px; cursor: pointer; text-decoration: none; display: inline-block; font-weight: bold; transition: all 0.3s ease; }
+        .btn:hover { background: transparent; color: white; }
+        .section { padding: 4rem 0; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; }
+        .card { background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.07); text-align: center; }
+        .card h3 { color: ${accent}; margin-bottom: 1rem; }
+        footer { background: #333; color: white; padding: 2rem 0; text-align: center; margin-top: 2rem; }
+    </style>
+</head>
+<body>`;
+            let bodyContent = '';
+            if (isPortfolio) {
+                bodyContent = `
+    <header><div class="container"><nav><div class="logo">MyPortfolio</div><ul class="nav-links"><li><a href="#">About</a></li><li><a href="#">Work</a></li><li><a href="#">Contact</a></li></ul></nav></div></header>
+    <section class="hero"><h1>Creative Professional</h1><p>Crafting digital experiences with passion and precision.</p><a href="#" class="btn">View My Work</a></section>
+    <section class="section"><div class="container"><h2 style="text-align:center; font-size: 2rem; margin-bottom: 3rem;">Featured Projects</h2><div class="grid"><div class="card"><h3>Project One</h3><p>A description of a standout project showcasing skills.</p></div><div class="card"><h3>Project Two</h3><p>Details about another successful and creative endeavor.</p></div><div class="card"><h3>Project Three</h3><p>An overview of the latest work and its impact.</p></div></div></div></section>`;
+            } else if (isEcommerce) {
+                bodyContent = `
+    <header><div class="container"><nav><div class="logo">The Shop</div><ul class="nav-links"><li><a href="#">New Arrivals</a></li><li><a href="#">Collections</a></li><li><a href="#">Cart (0)</a></li></ul></nav></div></header>
+    <section class="hero"><h1>Summer Collection</h1><p>Discover our latest curated items for the season.</p><a href="#" class="btn">Shop Now</a></section>
+    <section class="section"><div class="container"><h2 style="text-align:center; font-size: 2rem; margin-bottom: 3rem;">Best Sellers</h2><div class="grid"><div class="card"><h3>Artisan Mug</h3><p>Hand-crafted ceramic mug. Perfect for your morning coffee.</p><h4>$25.00</h4></div><div class="card"><h3>Linen Scarf</h3><p>A lightweight and stylish scarf made from 100% pure linen.</p><h4>$45.00</h4></div><div class="card"><h3>Leather Wallet</h3><p>A minimalist wallet made from full-grain leather.</p><h4>$75.00</h4></div></div></div></section>`;
+            } else {
+                bodyContent = `
+    <header><div class="container"><nav><div class="logo">BizPro</div><ul class="nav-links"><li><a href="#">Home</a></li><li><a href="#">Services</a></li><li><a href="#">About</a></li></ul></nav></div></header>
+    <section class="hero"><h1>Innovative Solutions</h1><p>We help businesses grow by providing cutting-edge services.</p><a href="#" class="btn">Learn More</a></section>
+    <section class="section"><div class="container"><h2 style="text-align:center; font-size: 2rem; margin-bottom: 3rem;">Our Core Services</h2><div class="grid"><div class="card"><h3>Consulting</h3><p>Expert advice to help you navigate market challenges.</p></div><div class="card"><h3>Development</h3><p>Custom software solutions tailored to your unique needs.</p></div><div class="card"><h3>Marketing</h3><p>Data-driven strategies to expand your reach and impact.</p></div></div></div></section>`;
+            }
+            let foot = `
+    <footer><div class="container"><p>© 2024 Generated by Nexhil AI. All rights reserved.</p></div></footer>
+</body>
+</html>`;
+            return head + bodyContent + foot;
+        }
+    </script>
+</body>
+</html>
