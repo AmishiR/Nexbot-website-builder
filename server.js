@@ -1,11 +1,10 @@
-// server.js - CORRECTED VERSION
+// server.js
 import express from 'express';
 import cors from 'cors';
-// The line below is now correct. The package is "@google/generative-ai"
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI } from "@google/genai";
 
 // --- CONFIGURATION ---
-const API_KEY = "AIzaSyCt9eZD4lIEecKY70wGGgaSB-xv7lboLsE"; // <-- PASTE YOUR REAL API KEY HERE
+const API_KEY = "AIzaSyCt9eZD4lIEecKY70wGGgaSB-xv7lboLsE"; // <-- IMPORTANT: PASTE YOUR API KEY HERE
 const PORT = 3000;
 
 // --- INITIALIZATION ---
@@ -16,9 +15,13 @@ const genAI = new GoogleGenerativeAI(API_KEY);
 app.use(cors());
 app.use(express.json());
 
+/**
+ * Generates website code using the Gemini API based on a user prompt.
+ */
 async function generateWebsiteCode(prompt) {
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
+    // The prompt that tells the AI exactly how to respond
     const fullPrompt = `
         You are an expert web developer. Your task is to generate the complete HTML code for a single-page website based on the user's request.
         
@@ -26,7 +29,7 @@ async function generateWebsiteCode(prompt) {
 
         **Instructions:**
         1.  Create a visually appealing, modern, and responsive design.
-        2.  Generate a **single, self-contained HTML file**.
+        2.  Generate a  self-contained HTML file**.
         3.  All CSS must be included within a \`<style>\` tag in the \`<head>\`.
         4.  All JavaScript (if any is needed) must be included within a \`<script>\` tag.
         5.  Do not use any external CSS or JS files.
@@ -47,6 +50,7 @@ async function generateWebsiteCode(prompt) {
     }
 }
 
+// --- API ENDPOINT ---
 app.post('/generate', async (req, res) => {
     const { prompt } = req.body;
 
@@ -62,6 +66,7 @@ app.post('/generate', async (req, res) => {
     }
 });
 
+// --- START SERVER ---
 app.listen(PORT, () => {
     console.log(`AI Website Builder server running on http://localhost:${PORT}`);
 });
