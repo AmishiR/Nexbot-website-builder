@@ -288,185 +288,160 @@
     </div>
 
     <script>
-        // --- Element Selectors ---
-        const generateBtn = document.getElementById('generateBtn');
-        const promptInput = document.getElementById('promptInput');
-        const loadingOverlay = document.getElementById('loadingOverlay');
-        const loadingStatus = document.getElementById('loadingStatus');
-        const previewFrame = document.getElementById('previewFrame');
-        const codePreview = document.getElementById('codePreview');
-        const exportBtn = document.getElementById('exportBtn');
-        const copyCodeBtn = document.getElementById('copyCodeBtn');
-        const fullscreenBtn = document.getElementById('fullscreenBtn');
+    // --- Element Selectors ---
+    const generateBtn = document.getElementById('generateBtn');
+    const promptInput = document.getElementById('promptInput');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const loadingStatus = document.getElementById('loadingStatus');
+    const previewFrame = document.getElementById('previewFrame');
+    const codePreview = document.getElementById('codePreview');
+    const exportBtn = document.getElementById('exportBtn');
+    const copyCodeBtn = document.getElementById('copyCodeBtn');
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
 
-        // --- Event Listeners ---
-        generateBtn.addEventListener('click', () => {
-            const prompt = promptInput.value.trim();
-            if (!prompt) {
-                alert('Please enter a description for your website.');
-                return;
-            }
-            generateWebsite(prompt);
-        });
+    // Store the generated code globally for export/copy
+    window.generatedHTML = null;
 
-        copyCodeBtn.addEventListener('click', () => {
-            if (window.generatedHTML) {
-                navigator.clipboard.writeText(window.generatedHTML).then(() => {
-                    copyCodeBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
-                    setTimeout(() => {
-                        copyCodeBtn.innerHTML = '<i class="fas fa-copy"></i> Copy Code';
-                    }, 2000);
-                });
-            }
-        });
+    // --- Event Listeners ---
+    generateBtn.addEventListener('click', () => {
+        const prompt = promptInput.value.trim();
+        if (!prompt) {
+            alert('Please enter a description for your website.');
+            return;
+        }
+        generateWebsite(prompt);
+    });
 
-        exportBtn.addEventListener('click', () => {
-            if (window.generatedHTML) {
-                const blob = new Blob([window.generatedHTML], { type: 'text/html' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'generated-website.html';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            }
-        });
+    // Add an event listener for pressing "Enter" in the textarea
+    promptInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault(); // Prevent new line
+            generateBtn.click(); // Trigger the generate button click
+        }
+    });
 
-        fullscreenBtn.addEventListener('click', () => {
-            if (previewFrame.src) {
-                window.open(previewFrame.src, '_blank');
-            }
-        });
-        
-        document.getElementById('newProject').addEventListener('click', (e) => {
-            e.preventDefault();
-            promptInput.value = '';
-            previewFrame.src = 'about:blank';
-            codePreview.textContent = 'Your generated HTML code will appear here...';
-            exportBtn.disabled = true;
-            window.generatedHTML = null;
-        });
-
-        document.getElementById('templates').addEventListener('click', (e) => {
-            e.preventDefault();
-            const templates = [
-                'Create a modern portfolio website for a graphic designer',
-                'Build an e-commerce store for selling handmade crafts',
-                'Design a landing page for a SaaS product',
-                'Create a restaurant website with menu and reservations',
-                'Build a blog website for travel experiences'
-            ];
-            const randomTemplate = templates[Math.floor(Math.random() * templates.length)];
-            promptInput.value = randomTemplate;
-        });
-        
-        document.querySelectorAll('.project-item').forEach(item => {
-            item.addEventListener('click', () => {
-                const title = item.querySelector('h4').textContent;
-                const description = item.querySelector('p').textContent;
-                promptInput.value = `Create a ${title.toLowerCase()} - ${description}`;
+    copyCodeBtn.addEventListener('click', () => {
+        if (window.generatedHTML) {
+            navigator.clipboard.writeText(window.generatedHTML).then(() => {
+                copyCodeBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                setTimeout(() => {
+                    copyCodeBtn.innerHTML = '<i class="fas fa-copy"></i> Copy Code';
+                }, 2000);
             });
+        }
+    });
+
+    exportBtn.addEventListener('click', () => {
+        if (window.generatedHTML) {
+            const blob = new Blob([window.generatedHTML], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'generated-website.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    });
+
+    fullscreenBtn.addEventListener('click', () => {
+        if (window.generatedHTML) {
+            const blob = new Blob([window.generatedHTML], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            window.open(url, '_blank');
+        }
+    });
+    
+    document.getElementById('newProject').addEventListener('click', (e) => {
+        e.preventDefault();
+        promptInput.value = '';
+        previewFrame.src = 'about:blank';
+        codePreview.textContent = 'Your generated HTML code will appear here...';
+        exportBtn.disabled = true;
+        window.generatedHTML = null;
+        promptInput.focus();
+    });
+
+    document.getElementById('templates').addEventListener('click', (e) => {
+        e.preventDefault();
+        const templates = [
+            'Create a modern portfolio website for a graphic designer named Alex Doe. Include sections for About, Portfolio, and Contact.',
+            'Build a landing page for a new SaaS product called "SyncUp" that helps teams collaborate. It should have a hero section with a call-to-action button.',
+            'Design a website for a local coffee shop called "The Daily Grind". Include a simple menu and opening hours.',
+            'Create a personal blog website for a travel enthusiast. It should have a clean, minimalist design with a grid of blog post previews.',
+        ];
+        const randomTemplate = templates[Math.floor(Math.random() * templates.length)];
+        promptInput.value = randomTemplate;
+    });
+    
+    document.querySelectorAll('.project-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const title = item.querySelector('h4').textContent;
+            const description = item.querySelector('p').textContent;
+            promptInput.value = `Create a website for a ${title.toLowerCase()}, specifically for a ${description}`;
         });
+    });
 
 
-        // --- Core Functions ---
-        async function generateWebsite(prompt) {
-            loadingOverlay.style.display = 'flex';
-            generateBtn.disabled = true;
-            
-            const loadingSteps = ['Analyzing requirements...', 'Designing layout...', 'Generating HTML & CSS...', 'Finalizing website...'];
-            let stepIndex = 0;
+    // --- Core Functions ---
+    async function generateWebsite(prompt) {
+        // 1. Show Loading State
+        loadingOverlay.style.display = 'flex';
+        generateBtn.disabled = true;
+        generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+        exportBtn.disabled = true;
+
+        const loadingSteps = ['Connecting to AI model...', 'Analyzing your prompt...', 'Designing the layout...', 'Writing HTML & CSS...', 'Finalizing the code...'];
+        let stepIndex = 0;
+        loadingStatus.textContent = loadingSteps[stepIndex];
+        const stepInterval = setInterval(() => {
+            stepIndex = (stepIndex + 1) % loadingSteps.length;
             loadingStatus.textContent = loadingSteps[stepIndex];
-            const stepInterval = setInterval(() => {
-                stepIndex = (stepIndex + 1) % loadingSteps.length;
-                loadingStatus.textContent = loadingSteps[stepIndex];
-            }, 1000);
+        }, 2000);
 
-            try {
-                await new Promise(resolve => setTimeout(resolve, 4000));
-                
-                const generatedHTML = generateSampleWebsite(prompt);
-                window.generatedHTML = generatedHTML;
-                
-                // Display in code view
-                codePreview.textContent = generatedHTML;
-                
-                // Display in preview frame
-                const blob = new Blob([generatedHTML], { type: 'text/html' });
-                const url = URL.createObjectURL(blob);
-                previewFrame.src = url;
-                
-                exportBtn.disabled = false;
-                
-            } catch (error) {
-                alert('Error generating website. Please try again.');
-            } finally {
-                loadingOverlay.style.display = 'none';
-                generateBtn.disabled = false;
-                clearInterval(stepInterval);
+        try {
+            // 2. Call our backend server
+            const response = await fetch('http://localhost:3000/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ prompt: prompt }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
             }
-        }
 
-        function generateSampleWebsite(prompt) {
-            const isPortfolio = prompt.toLowerCase().includes('portfolio');
-            const isEcommerce = prompt.toLowerCase().includes('ecommerce') || prompt.toLowerCase().includes('store');
-            const accent = '#00BCD4';
-            const bg = '#f4f7f6';
-            const text = '#333';
+            const data = await response.json();
+            const generatedHTML = data.html;
             
-            let head = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generated Website</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background-color: ${bg}; color: ${text}; line-height: 1.6; }
-        .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
-        header { background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05); padding: 1rem 0; }
-        nav { display: flex; justify-content: space-between; align-items: center; }
-        .logo { font-size: 1.5rem; font-weight: bold; color: ${accent}; }
-        .nav-links { display: flex; list-style: none; gap: 2rem; padding: 0; }
-        .nav-links a { color: ${text}; text-decoration: none; font-weight: 500; }
-        .hero { padding: 5rem 0; text-align: center; background: ${accent}; color: white; }
-        .hero h1 { font-size: 3rem; margin-bottom: 1rem; }
-        .hero p { font-size: 1.2rem; margin-bottom: 2rem; opacity: 0.9; }
-        .btn { background: white; color: ${accent}; padding: 0.8rem 1.8rem; border: 2px solid white; border-radius: 50px; cursor: pointer; text-decoration: none; display: inline-block; font-weight: bold; transition: all 0.3s ease; }
-        .btn:hover { background: transparent; color: white; }
-        .section { padding: 4rem 0; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; }
-        .card { background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.07); text-align: center; }
-        .card h3 { color: ${accent}; margin-bottom: 1rem; }
-        footer { background: #333; color: white; padding: 2rem 0; text-align: center; margin-top: 2rem; }
-    </style>
-</head>
-<body>`;
-            let bodyContent = '';
-            if (isPortfolio) {
-                bodyContent = `
-    <header><div class="container"><nav><div class="logo">MyPortfolio</div><ul class="nav-links"><li><a href="#">About</a></li><li><a href="#">Work</a></li><li><a href="#">Contact</a></li></ul></nav></div></header>
-    <section class="hero"><h1>Creative Professional</h1><p>Crafting digital experiences with passion and precision.</p><a href="#" class="btn">View My Work</a></section>
-    <section class="section"><div class="container"><h2 style="text-align:center; font-size: 2rem; margin-bottom: 3rem;">Featured Projects</h2><div class="grid"><div class="card"><h3>Project One</h3><p>A description of a standout project showcasing skills.</p></div><div class="card"><h3>Project Two</h3><p>Details about another successful and creative endeavor.</p></div><div class="card"><h3>Project Three</h3><p>An overview of the latest work and its impact.</p></div></div></div></section>`;
-            } else if (isEcommerce) {
-                bodyContent = `
-    <header><div class="container"><nav><div class="logo">The Shop</div><ul class="nav-links"><li><a href="#">New Arrivals</a></li><li><a href="#">Collections</a></li><li><a href="#">Cart (0)</a></li></ul></nav></div></header>
-    <section class="hero"><h1>Summer Collection</h1><p>Discover our latest curated items for the season.</p><a href="#" class="btn">Shop Now</a></section>
-    <section class="section"><div class="container"><h2 style="text-align:center; font-size: 2rem; margin-bottom: 3rem;">Best Sellers</h2><div class="grid"><div class="card"><h3>Artisan Mug</h3><p>Hand-crafted ceramic mug. Perfect for your morning coffee.</p><h4>$25.00</h4></div><div class="card"><h3>Linen Scarf</h3><p>A lightweight and stylish scarf made from 100% pure linen.</p><h4>$45.00</h4></div><div class="card"><h3>Leather Wallet</h3><p>A minimalist wallet made from full-grain leather.</p><h4>$75.00</h4></div></div></div></section>`;
-            } else {
-                bodyContent = `
-    <header><div class="container"><nav><div class="logo">BizPro</div><ul class="nav-links"><li><a href="#">Home</a></li><li><a href="#">Services</a></li><li><a href="#">About</a></li></ul></nav></div></header>
-    <section class="hero"><h1>Innovative Solutions</h1><p>We help businesses grow by providing cutting-edge services.</p><a href="#" class="btn">Learn More</a></section>
-    <section class="section"><div class="container"><h2 style="text-align:center; font-size: 2rem; margin-bottom: 3rem;">Our Core Services</h2><div class="grid"><div class="card"><h3>Consulting</h3><p>Expert advice to help you navigate market challenges.</p></div><div class="card"><h3>Development</h3><p>Custom software solutions tailored to your unique needs.</p></div><div class="card"><h3>Marketing</h3><p>Data-driven strategies to expand your reach and impact.</p></div></div></div></section>`;
-            }
-            let foot = `
-    <footer><div class="container"><p>© 2024 Generated by Nexhil AI. All rights reserved.</p></div></footer>
-</body>
-</html>`;
-            return head + bodyContent + foot;
+            // 3. Update the UI with the result
+            window.generatedHTML = generatedHTML;
+            
+            codePreview.textContent = generatedHTML;
+            
+            const blob = new Blob([generatedHTML], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            previewFrame.src = url;
+            
+            exportBtn.disabled = false;
+            
+        } catch (error) {
+            console.error('Error generating website:', error);
+            alert(`An error occurred: ${error.message}. Please check the server console for details.`);
+            codePreview.textContent = `// Error generating code.\n\n/*\n${error}\n*/`;
+            previewFrame.src = 'about:blank';
+        } finally {
+            // 4. Hide Loading State
+            loadingOverlay.style.display = 'none';
+            generateBtn.disabled = false;
+            generateBtn.innerHTML = '<i class="fas fa-magic"></i> Generate';
+            clearInterval(stepInterval);
         }
-    </script>
+    }
+</script>
 </body>
 </html>
