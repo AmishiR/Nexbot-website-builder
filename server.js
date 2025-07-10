@@ -1,99 +1,56 @@
-// server.js
 import express from 'express';
 import cors from 'cors';
-import { GoogleGenerativeAI } from "@google/genai";
+import bodyParser from 'body-parser';
+import { GoogleGenAI } from '@google/genai';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-// --- IMPORT PRE-DEFINED TEMPLATES ---
-import { portfolioTemplate } from '/Users/amishiranjan/Desktop/nexbot/templates/portfolioTemplate.js';
-import { ecommerceTemplate } from '/Users/amishiranjan/Desktop/nexbot/templates/ecommerceTemplate.js';
-import { codingWebsiteTemplate } from '/Users/amishiranjan/Desktop/nexbot/templates/codingWebsiteTemplate.js';
-
-// --- CONFIGURATION ---
-const API_KEY = "AIzaSyCt9eZD4lIEecKY70wGGgaSB-xv7lboLsE"; // <-- IMPORTANT: PASTE YOUR API KEY HERE
+const app = express();
 const PORT = 3000;
 
-// --- INITIALIZATION ---
-const app = express();
-const genAI = new GoogleGenerativeAI(API_KEY);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// --- TEMPLATE MAPPING ---
-// A clean way to map prompts to templates
-const templates = {
-    'personal portfolio': portfolioTemplate,
-    'ecommerce website': ecommerceTemplate,
-    'coding website': codingWebsiteTemplate,
-};
-
-// --- MIDDLEWARE ---
 app.use(cors());
-app.use(express.json());
+app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
-/**
- * Generates website code using the Gemini API based on a user prompt.
- * (This function is now only called if a pre-defined template is not found)
- */
-async function generateWebsiteCode(prompt) {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+// Initialize Gemini
+const ai = new GoogleGenAI({ apiKey: 'AIzaSyCt9eZD4lIEecKY70wGGgaSB-xv7lboLsE' });
 
-    // The prompt that tells the AI exactly how to respond
-    const fullPrompt = `
-        You are an expert web developer. Your task is to generate the complete HTML code for a single-page website based on the user's request.
-        
-        **User Request:** "${prompt}"
-
-        **Instructions:**
-        1.  Create a visually appealing, modern, and responsive design.
-        2.  Generate a **single, self-contained HTML file**.
-        3.  All CSS must be included within a \`<style>\` tag in the \`<head>\`.
-        4.  All JavaScript (if any is needed) must be included within a \`<script>\` tag.
-        5.  Do not use any external CSS or JS files.
-        6.  Use professional-looking placeholder content. For images, use placeholder services like https://via.placeholder.com/400x300.
-        7.  Your entire response should be ONLY the HTML code, starting with \`<!DOCTYPE html>\` and ending with \`</html>\`. Do not include any other text, explanations, or markdown formatting like \`\`\`html.
-    `;
-
-    try {
-        console.log("Sending request to Gemini API...");
-        const result = await model.generateContent(fullPrompt);
-        const response = await result.response;
-        const generatedCode = response.text();
-        console.log("Successfully received code from Gemini.");
-        // Clean up potential markdown formatting from the AI response
-        return generatedCode.replace(/^```html\n?/, '').replace(/```$/, '');
-    } catch (error) {
-        console.error("Error calling Gemini API:", error);
-        throw new Error("Failed to generate website from AI model.");
-    }
-}
-
-// --- API ENDPOINT ---
+// Generate route
 app.post('/generate', async (req, res) => {
-    const { prompt } = req.body;
+  const { prompt } = req.body;
 
-    if (!prompt) {
-        return res.status(400).json({ error: 'Prompt is required' });
-    }
+  if (!prompt || prompt.trim() === '') {
+    return res.status(400).json({ error: 'Prompt is required' });
+  }
 
-    // Normalize prompt to be lowercase and trimmed to match keys in our template map
-    const normalizedPrompt = prompt.trim().toLowerCase();
+  try {
+    const chat = await ai.models.generateContent({
+      model: 'gemini-1.5-flash',
+      contents: [
+        { role: 'user', parts: [{ text: `Generate a beautiful responsive HTML + CSS website based on this prompt: ${prompt}. Only give the complete code in one HTML file.` }] },
+      ],
+    });
 
-    // *** NEW LOGIC: Check for pre-defined templates first ***
-    if (templates[normalizedPrompt]) {
-        console.log(`Serving pre-defined template for: "${normalizedPrompt}"`);
-        // If a template is found, return it directly
-        return res.json({ html: templates[normalizedPrompt] });
-    }
+    const responseText = chat.response.text || '';
+    const codeMatch = responseText.match(/<\s*html[\s\S]*<\/\s*html\s*>/i);
+    const generatedHTML = codeMatch ? codeMatch[0] : `<html><body><pre>${responseText}</pre></body></html>`;
 
-    // *** FALLBACK: If no template matches, use the AI ***
-    console.log(`No template found. Calling AI for custom prompt: "${prompt}"`);
-    try {
-        const htmlCode = await generateWebsiteCode(prompt);
-        res.json({ html: htmlCode });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
+    res.json({ html: generatedHTML });
+
+  } catch (error) {
+    console.error('Error generating site:', error);
+    res.status(500).json({ error: 'Something went wrong while generating the site.' });
+  }
 });
 
-// --- START SERVER ---
+// Serve index.html on root
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 app.listen(PORT, () => {
-    console.log(`AI Website Builder server running on http://localhost:${PORT}`);
+  console.log(`✅ Server running: http://localhost:${PORT}`);
 });
