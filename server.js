@@ -16,7 +16,28 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Initialize Gemini
-const ai = new GoogleGenAI({ apiKey: 'AIzaSyCt9eZD4lIEecKY70wGGgaSB-xv7lboLsE' });
+const ai = new GoogleGenAI({
+  apiKey: 'AIzaSyCt9eZD4lIEecKY70wGGgaSB-xv7lboLsE'
+});
+
+// Dummy Fallback Website
+const fallbackHTML = `
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Fallback Site</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #fafafa; }
+    h1 { color: #333; }
+    p { color: #777; }
+  </style>
+</head>
+<body>
+  <h1>Welcome to Your Website 🚀</h1>
+  <p>This is a simple placeholder site. AI is temporarily unavailable.</p>
+</body>
+</html>
+`;
 
 // Generate route
 app.post('/generate', async (req, res) => {
@@ -34,15 +55,23 @@ app.post('/generate', async (req, res) => {
       ],
     });
 
-    const responseText = chat.response.text || '';
+    // ✅ Safely access response
+    const responseText = chat?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
     const codeMatch = responseText.match(/<\s*html[\s\S]*<\/\s*html\s*>/i);
     const generatedHTML = codeMatch ? codeMatch[0] : `<html><body><pre>${responseText}</pre></body></html>`;
+
+    // If AI response is empty, use fallback
+    if (!generatedHTML || generatedHTML.length < 50) {
+      console.warn('⚠️ Empty or too short response. Using fallback site.');
+      return res.json({ html: fallbackHTML });
+    }
 
     res.json({ html: generatedHTML });
 
   } catch (error) {
-    console.error('Error generating site:', error);
-    res.status(500).json({ error: 'Something went wrong while generating the site.' });
+    console.error('❌ Error generating site:', error);
+    res.status(500).json({ html: fallbackHTML, error: 'AI service unavailable. Showing fallback site.' });
   }
 });
 

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Nexhil AI - AI Website Generator</title>
+    <title>NEXBOT</title>
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
@@ -44,30 +44,8 @@
       .app-container {
         display: flex;
         height: 100vh;
-      }
-
-      /* --- SIDEBAR (Unchanged) --- */
-      .sidebar {
-        width: 280px;
-        background: var(--surface-color);
-        border-right: 1px solid var(--border-color);
-        display: flex;
         flex-direction: column;
-        transition: all 0.3s ease;
       }
-      .sidebar-header { padding: 1.5rem; border-bottom: 1px solid var(--border-color); }
-      .logo { display: flex; align-items: center; gap: 0.75rem; font-size: 1.25rem; font-weight: 700; color: var(--accent); }
-      .logo i { font-size: 1.5rem; }
-      .nav-section { flex: 1; padding: 1rem 1.5rem; }
-      .nav-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s ease; margin-bottom: 0.5rem; text-decoration: none; color: inherit; }
-      .nav-item:hover { background: rgba(0, 188, 212, 0.1); }
-      .nav-item i { width: 20px; text-align: center; opacity: 0.7; }
-      .recent-projects { margin-top: 2rem; }
-      .recent-projects h3 { font-size: 0.875rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--text-secondary); }
-      .project-item { padding: 0.75rem; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s ease; border: 1px solid transparent; margin-bottom: 0.5rem; }
-      .project-item:hover { background: rgba(0, 188, 212, 0.1); border-color: var(--accent); }
-      .project-item h4 { font-size: 0.875rem; font-weight: 600; margin-bottom: 0.25rem; }
-      .project-item p { font-size: 0.75rem; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
       /* --- NEW MAIN CONTENT LAYOUT --- */
       .main-content {
@@ -88,10 +66,23 @@
         flex-shrink: 0; /* Prevent top-bar from shrinking */
       }
 
-      .top-bar-left h1 {
+      .top-bar-left {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
         font-size: 1.5rem;
         font-weight: 700;
-        color: var(--text-primary); /* Simple white text */
+        color: var(--accent);
+      }
+
+      .logo i {
+        font-size: 1.5rem;
       }
 
       .top-bar-right { display: flex; align-items: center; gap: 1rem; }
@@ -193,6 +184,78 @@
       .generate-btn:hover { background: var(--accent-dark); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0, 188, 212, 0.2); }
       .generate-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
       
+      .new-project-btn {
+        background: var(--card-color);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        padding: 0 1.5rem;
+        height: 50px;
+        border-radius: 0.75rem;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+      }
+
+      .new-project-btn:hover { background: var(--surface-color); transform: translateY(-2px); }
+      
+      /* Deployment Dropdown */
+      .deployment-dropdown {
+        position: relative;
+        display: inline-block;
+      }
+      
+      .deployment-content {
+        display: none;
+        position: absolute;
+        right: 0;
+        top: 100%;
+        background: var(--surface-color);
+        border: 1px solid var(--border-color);
+        border-radius: 0.5rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        z-index: 1000;
+        min-width: 180px;
+        margin-top: 0.5rem;
+      }
+      
+      .deployment-content.show {
+        display: block;
+      }
+      
+      .deployment-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border-radius: 0.5rem;
+        margin: 0.25rem;
+        color: var(--text-primary);
+        text-decoration: none;
+      }
+      
+      .deployment-item:hover {
+        background: var(--card-color);
+        transform: translateX(4px);
+      }
+      
+      .deployment-item i {
+        font-size: 1.2rem;
+        width: 20px;
+        text-align: center;
+      }
+      
+      .deployment-item .fa-github {
+        color: #ffffff;
+      }
+      
+      .deployment-item .fa-triangle {
+        color: #000000;
+      }
+      
       /* Loading Overlay (Unchanged) */
       .loading-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
       .loading-spinner { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
@@ -203,36 +266,27 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <div class="logo">NEXBOT </div>
-            </div>
-            <div class="nav-section">
-                <a href="#" class="nav-item" id="newProject"><i class="fas fa-plus"></i> New Project</a>
-                <a href="#" class="nav-item" id="templates"><i class="fas fa-folder"></i> Templates</a>
-                <div class="recent-projects">
-                    <h3>Recent Projects</h3>
-                    <div class="project-item">
-                        <h4>E-commerce Store</h4>
-                        <p>Modern online store with shopping cart</p>
-                    </div>
-                    <div class="project-item">
-                        <h4>Portfolio Website</h4>
-                        <p>Clean portfolio for designer</p>
-                    </div>
-                </div>
-            </div>
-        </aside>
-
         <!-- Main Content -->
         <main class="main-content">
             <div class="top-bar">
                 <div class="top-bar-left">
-                    
+                    <div class="logo">NEXBOT</div>
                 </div>
                 <div class="top-bar-right">
                     <div class="status-indicator"><div class="status-dot"></div> Connected</div>
+                    <div class="deployment-dropdown">
+                        <button class="btn btn-primary" id="deployBtn"><i class="fas fa-rocket"></i> Deploy</button>
+                        <div class="deployment-content" id="deploymentContent">
+                            <a href="#" class="deployment-item" id="deployVercel">
+                                <i class="fas fa-triangle"></i>
+                                <span>Deploy to Vercel</span>
+                            </a>
+                            <a href="#" class="deployment-item" id="deployGithub">
+                                <i class="fab fa-github"></i>
+                                <span>Deploy to GitHub</span>
+                            </a>
+                        </div>
+                    </div>
                     <button class="btn btn-primary" id="exportBtn" disabled><i class="fas fa-file-archive"></i> Export HTML</button>
                 </div>
             </div>
@@ -271,6 +325,10 @@
                     <button class="generate-btn" id="generateBtn">
                         <i class="fas fa-magic"></i> Generate
                     </button>
+                    <button class="new-project-btn" id="newProject">
+                        <i class="fas fa-plus"></i> New Project
+                    </button>
+                    
                 </div>
             </div>
         </main>
@@ -298,6 +356,10 @@
     const exportBtn = document.getElementById('exportBtn');
     const copyCodeBtn = document.getElementById('copyCodeBtn');
     const fullscreenBtn = document.getElementById('fullscreenBtn');
+    const deployBtn = document.getElementById('deployBtn');
+    const deploymentContent = document.getElementById('deploymentContent');
+    const deployVercel = document.getElementById('deployVercel');
+    const deployGithub = document.getElementById('deployGithub');
 
     // Store the generated code globally for export/copy
     window.generatedHTML = null;
@@ -363,24 +425,41 @@
         promptInput.focus();
     });
 
-    document.getElementById('templates').addEventListener('click', (e) => {
+    // Deployment dropdown functionality
+    deployBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        const templates = [
-            'Create a modern portfolio website for a graphic designer named Alex Doe. Include sections for About, Portfolio, and Contact.',
-            'Build a landing page for a new SaaS product called "SyncUp" that helps teams collaborate. It should have a hero section with a call-to-action button.',
-            'Design a website for a local coffee shop called "The Daily Grind". Include a simple menu and opening hours.',
-            'Create a personal blog website for a travel enthusiast. It should have a clean, minimalist design with a grid of blog post previews.',
-        ];
-        const randomTemplate = templates[Math.floor(Math.random() * templates.length)];
-        promptInput.value = randomTemplate;
+        if (!window.generatedHTML) {
+            alert('Please generate a website first before deploying.');
+            return;
+        }
+        deploymentContent.classList.toggle('show');
     });
-    
-    document.querySelectorAll('.project-item').forEach(item => {
-        item.addEventListener('click', () => {
-            const title = item.querySelector('h4').textContent;
-            const description = item.querySelector('p').textContent;
-            promptInput.value = `Create a website for a ${title.toLowerCase()}, specifically for a ${description}`;
-        });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!deployBtn.contains(e.target) && !deploymentContent.contains(e.target)) {
+            deploymentContent.classList.remove('show');
+        }
+    });
+
+    deployVercel.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (!window.generatedHTML) {
+            alert('Please generate a website first before deploying.');
+            return;
+        }
+        deploymentContent.classList.remove('show');
+        window.open('https://vercel.com/new', '_blank');
+    });
+
+    deployGithub.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (!window.generatedHTML) {
+            alert('Please generate a website first before deploying.');
+            return;
+        }
+        deploymentContent.classList.remove('show');
+        window.open('https://github.com/new', '_blank');
     });
 
 
