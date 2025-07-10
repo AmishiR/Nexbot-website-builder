@@ -3,6 +3,11 @@ import express from 'express';
 import cors from 'cors';
 import { GoogleGenerativeAI } from "@google/genai";
 
+// --- IMPORT PRE-DEFINED TEMPLATES ---
+import { portfolioTemplate } from '/Users/amishiranjan/Desktop/nexbot/templates/portfolioTemplate.js';
+import { ecommerceTemplate } from '/Users/amishiranjan/Desktop/nexbot/templates/ecommerceTemplate.js';
+import { codingWebsiteTemplate } from '/Users/amishiranjan/Desktop/nexbot/templates/codingWebsiteTemplate.js';
+
 // --- CONFIGURATION ---
 const API_KEY = "AIzaSyCt9eZD4lIEecKY70wGGgaSB-xv7lboLsE"; // <-- IMPORTANT: PASTE YOUR API KEY HERE
 const PORT = 3000;
@@ -11,12 +16,21 @@ const PORT = 3000;
 const app = express();
 const genAI = new GoogleGenerativeAI(API_KEY);
 
+// --- TEMPLATE MAPPING ---
+// A clean way to map prompts to templates
+const templates = {
+    'personal portfolio': portfolioTemplate,
+    'ecommerce website': ecommerceTemplate,
+    'coding website': codingWebsiteTemplate,
+};
+
 // --- MIDDLEWARE ---
 app.use(cors());
 app.use(express.json());
 
 /**
  * Generates website code using the Gemini API based on a user prompt.
+ * (This function is now only called if a pre-defined template is not found)
  */
 async function generateWebsiteCode(prompt) {
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
@@ -29,7 +43,7 @@ async function generateWebsiteCode(prompt) {
 
         **Instructions:**
         1.  Create a visually appealing, modern, and responsive design.
-        2.  Generate a  self-contained HTML file**.
+        2.  Generate a **single, self-contained HTML file**.
         3.  All CSS must be included within a \`<style>\` tag in the \`<head>\`.
         4.  All JavaScript (if any is needed) must be included within a \`<script>\` tag.
         5.  Do not use any external CSS or JS files.
@@ -43,6 +57,7 @@ async function generateWebsiteCode(prompt) {
         const response = await result.response;
         const generatedCode = response.text();
         console.log("Successfully received code from Gemini.");
+        // Clean up potential markdown formatting from the AI response
         return generatedCode.replace(/^```html\n?/, '').replace(/```$/, '');
     } catch (error) {
         console.error("Error calling Gemini API:", error);
@@ -58,6 +73,18 @@ app.post('/generate', async (req, res) => {
         return res.status(400).json({ error: 'Prompt is required' });
     }
 
+    // Normalize prompt to be lowercase and trimmed to match keys in our template map
+    const normalizedPrompt = prompt.trim().toLowerCase();
+
+    // *** NEW LOGIC: Check for pre-defined templates first ***
+    if (templates[normalizedPrompt]) {
+        console.log(`Serving pre-defined template for: "${normalizedPrompt}"`);
+        // If a template is found, return it directly
+        return res.json({ html: templates[normalizedPrompt] });
+    }
+
+    // *** FALLBACK: If no template matches, use the AI ***
+    console.log(`No template found. Calling AI for custom prompt: "${prompt}"`);
     try {
         const htmlCode = await generateWebsiteCode(prompt);
         res.json({ html: htmlCode });
